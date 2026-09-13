@@ -1,0 +1,22 @@
+# CloudDesk-RDP plank dock template.
+# __FIREFOX_ID__ is substituted by the installer with the actual Firefox
+# desktop file id present on this system (firefox.desktop or
+# firefox-esr.desktop), because it differs between distros/PPAs.
+#
+# Key notes (libplank enums):
+#   Position: 0=left 1=right 2=top 3=bottom   -> 3 = bottom (macOS-style)
+#   Alignment/ItemsAlignment: 0=start 1=end 2=center -> 2 = centered
+#   HideMode: 0=none 1=autohide 2=dodge-maximized 3=intellihide 4=dodge-active
+#             -> 3 = hide only when a window overlaps the dock area
+#   ZoomEnabled=false: icon zoom animations cost CPU/bandwidth over RDP.
+[PlankDockPreferences]
+IconSize=44
+Position=3
+Alignment=2
+ItemsAlignment=2
+HideMode=3
+Theme=Transparent
+ZoomEnabled=false
+LockItems=true
+CurrentWorkspaceOnly=false
+DockItems=__FIREFOX_ID__.dockitem;xfce4-terminal.dockitem;thunar.dockitem

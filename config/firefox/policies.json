@@ -1,0 +1,22 @@
+{
+    "policies": {
+        "DisableTelemetry": true,
+        "DisablePocket": true,
+        "DontCheckDefaultBrowser": true,
+        "SearchSuggestEnabled": true,
+        "Preferences": {
+            "toolkit.cosmeticanimations.enabled": {
+                "Value": false
+            },
+            "browser.shell.checkDefaultBrowser": {
+                "Value": false
+            },
+            "browser.aboutConfig.showWarning": {
+                "Value": false
+            },
+            "browser.tabs.unloadOnLowMemory": {
+                "Value": true
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CloudDesk-RDP window manager settings.
+     Compositing is disabled on purpose: xorgxrdp has no GPU, and the
+     compositor would only burn CPU/RAM on a 1 vCPU / 1 GB VPS.
+     __XFWM_THEME__ is substituted by the installer (Greybird when available,
+     otherwise the xfwm4 built-in 'default' theme). -->
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="__XFWM_THEME__"/>
+    <property name="use_compositing" type="bool" value="false"/>
+    <property name="activate_action" type="string" value="bring"/>
+    <property name="cycle_tabwin_mode" type="uint" value="0"/>
+  </property>
+</channel>

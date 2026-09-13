@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Files
+GenericName=File Manager
+Comment=Browse your files and folders
+Exec=thunar %U
+TryExec=thunar
+Icon=folder
+Terminal=false
+StartupNotify=true
+Categories=System;FileTools;Utility;Core;GTK;
+MimeType=inode/directory;

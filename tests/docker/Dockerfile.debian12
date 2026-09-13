@@ -1,0 +1,18 @@
+# CloudDesk-RDP e2e test image: Debian 12 (bookworm)
+# Builds with install.sh running as root inside the container (no systemd,
+# which exercises the installer's container fallbacks on purpose).
+FROM debian:12
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl gnupg iproute2 procps psmisc sudo less \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . /opt/CloudDesk-RDP
+WORKDIR /opt/CloudDesk-RDP
+
+# Test credentials only exist inside this throwaway container.
+ENV CLOUDDESK_USER=cloudtest
+ENV CLOUDDESK_PASSWORD=CloudTest2026x
+
+RUN /opt/CloudDesk-RDP/install.sh

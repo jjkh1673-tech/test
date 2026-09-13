@@ -1,0 +1,9 @@
+# CloudDesk-RDP: suppress polkit password prompts for colord color-profile
+# actions inside remote desktop sessions. Scope is limited to color-manager
+# actions; this is the standard xrdp UX fix and does not open anything else.
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.color-manager.") === 0 &&
+        subject.active) {
+        return polkit.Result.YES;
+    }
+});

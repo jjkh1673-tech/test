@@ -1,0 +1,20 @@
+# Build / release artifacts
+*.zip
+*.sha256
+
+# Logs and temporary output
+*.log
+*.tmp
+tests/.tmp/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Python caches (wallpaper generator)
+__pycache__/
+*.pyc

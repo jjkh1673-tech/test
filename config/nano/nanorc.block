@@ -1,0 +1,18 @@
+# >>> CloudDesk-RDP nano configuration >>>
+# Managed block maintained by install.sh. Everything between the >>> and <<<
+# markers is replaced on re-install and removed by uninstall.sh.
+# Line numbers, mouse click-to-place-cursor, 4-space tabs, soft wrap and
+# extension-aware syntax highlighting (via the shipped syntax definitions).
+set linenumbers
+set constantshow
+set mouse
+set tabsize 4
+set tabstospaces
+set autoindent
+set softwrap
+set smarthome
+set atblanks
+set matchbrackets "(<[{)>]}"
+# __NANO_EXTRAS__
+include /usr/share/nano/*.nanorc
+# <<< CloudDesk-RDP nano configuration <<<

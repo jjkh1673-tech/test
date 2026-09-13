@@ -1,0 +1,11 @@
+# Files that must never end up in a container build context or git history.
+.git/
+.github/
+*.zip
+*.sha256
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
