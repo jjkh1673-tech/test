@@ -16,9 +16,6 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
-ENV FIREFOX_CHANNEL=firefox-esr-latest
-firefox_url="https://download.mozilla.org/?product=${FIREFOX_CHANNEL}&os=${mozarch}&lang=en-US"
-
 
 # --- Core stack: minimal XFCE + xrdp + helpers (same set as install.sh) ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
