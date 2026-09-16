@@ -58,7 +58,7 @@ RUN apt-get update \
        done \
     && rm -rf /var/lib/apt/lists/*
 
-# --- Firefox (official Mozilla APT repository: real .deb, no snap) ---
+# --- Firefox (official Mozilla APT repository) ---
 RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in \
@@ -71,26 +71,28 @@ RUN set -eux; \
     echo "Configuring Mozilla APT repository for ${arch}..."; \
     install -d -m 0755 /etc/apt/keyrings; \
     rm -f /etc/apt/keyrings/packages.mozilla.org.asc; \
-    curl --fail --show-error --silent --location \
+    curl \
+        --fail \
+        --show-error \
+        --silent \
+        --location \
         --retry 5 \
         --retry-delay 3 \
         --retry-all-errors \
         --connect-timeout 30 \
         --max-time 120 \
-        https://packages.mozilla.org/apt/repo-signing-key.gpg \
+        "https://packages.mozilla.org/apt/repo-signing-key.gpg" \
         --output /etc/apt/keyrings/packages.mozilla.org.asc; \
     test -s /etc/apt/keyrings/packages.mozilla.org.asc; \
-    fingerprint="$$(gpg --show-keys --with-colons /etc/apt/keyrings/packages.mozilla.org.asc \
-        | awk -F: '$$1 == "fpr" {print $$10; exit}')"; \
-    test "$$fingerprint" = "35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"; \
+    fingerprint="$(gpg --show-keys --with-colons \
+        /etc/apt/keyrings/packages.mozilla.org.asc \
+        | awk -F: '$1 == "fpr" {print $10; exit}')"; \
+    echo "Mozilla repository key fingerprint: ${fingerprint}"; \
+    test "${fingerprint}" = "35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"; \
+    echo "Mozilla repository signing key verified."; \
     printf '%s\n' \
-        "Types: deb" \
-        "URIs: https://packages.mozilla.org/apt" \
-        "Suites: mozilla" \
-        "Components: main" \
-        "Architectures: ${arch}" \
-        "Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc" \
-        > /etc/apt/sources.list.d/mozilla.sources; \
+        "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
+        > /etc/apt/sources.list.d/mozilla.list; \
     printf '%s\n' \
         "Package: *" \
         "Pin: origin packages.mozilla.org" \
@@ -104,12 +106,16 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends firefox; \
     command -v firefox; \
+    firefox --version; \
     test -x /usr/bin/firefox; \
     test -f /usr/share/applications/firefox.desktop; \
     ln -sf /usr/share/applications/firefox.desktop \
         /usr/share/applications/firefox-esr.desktop; \
     test -L /usr/share/applications/firefox-esr.desktop; \
-    update-desktop-database /usr/share/applications 2>/dev/null || true; \
+    readlink -f /usr/share/applications/firefox-esr.desktop; \
+    if command -v update-desktop-database >/dev/null 2>&1; then \
+        update-desktop-database /usr/share/applications; \
+    fi; \
     rm -rf /var/lib/apt/lists/*
 
 # --- Project files: shared config templates, assets, helper CLI ---
