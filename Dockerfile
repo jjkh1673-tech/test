@@ -58,58 +58,59 @@ RUN apt-get update \
        done \
     && rm -rf /var/lib/apt/lists/*
 
-# --- Firefox ESR (official Mozilla tarball: no snap, works without systemd) ---
+# --- Firefox (official Mozilla APT repository: real .deb, no snap) ---
 RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in \
-        amd64) mozarch="linux64" ;; \
-        arm64) mozarch="linux64-aarch64" ;; \
-        *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
+        amd64|arm64) ;; \
+        *) \
+            echo "Unsupported architecture: ${arch}" >&2; \
+            exit 1; \
+            ;; \
     esac; \
-    firefox_url="https://download.mozilla.org/?product=firefox-esr-latest&os=${mozarch}&lang=en-US"; \
-    echo "Downloading Firefox ESR from: ${firefox_url}"; \
-    rm -f /tmp/firefox.tar.xz; \
+    echo "Configuring Mozilla APT repository for ${arch}..."; \
+    install -d -m 0755 /etc/apt/keyrings; \
+    rm -f /etc/apt/keyrings/packages.mozilla.org.asc; \
     curl --fail --show-error --silent --location \
         --retry 5 \
         --retry-delay 3 \
         --retry-all-errors \
         --connect-timeout 30 \
-        --max-time 600 \
-        "$firefox_url" \
-        --output /tmp/firefox.tar.xz; \
-    test -s /tmp/firefox.tar.xz; \
-    file /tmp/firefox.tar.xz; \
-    tar -tJf /tmp/firefox.tar.xz >/dev/null; \
-    rm -rf /opt/firefox; \
-    mkdir -p /opt/firefox; \
-    tar -xJf /tmp/firefox.tar.xz \
-        -C /opt/firefox \
-        --strip-components=1; \
-    test -x /opt/firefox/firefox; \
-    test -f /opt/firefox/application.ini; \
-    rm -f /tmp/firefox.tar.xz; \
-    ln -sf /opt/firefox/firefox /usr/local/bin/firefox; \
-    mkdir -p /usr/share/applications; \
+        --max-time 120 \
+        https://packages.mozilla.org/apt/repo-signing-key.gpg \
+        --output /etc/apt/keyrings/packages.mozilla.org.asc; \
+    test -s /etc/apt/keyrings/packages.mozilla.org.asc; \
+    fingerprint="$$(gpg --show-keys --with-colons /etc/apt/keyrings/packages.mozilla.org.asc \
+        | awk -F: '$$1 == "fpr" {print $$10; exit}')"; \
+    test "$$fingerprint" = "35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"; \
     printf '%s\n' \
-        '[Desktop Entry]' \
-        'Version=1.0' \
-        'Type=Application' \
-        'Name=Firefox' \
-        'GenericName=Web Browser' \
-        'Comment=Browse the Web' \
-        'Exec=/usr/local/bin/firefox %u' \
-        'Terminal=false' \
-        'Icon=/opt/firefox/browser/chrome/icons/default/default128.png' \
-        'Categories=Network;WebBrowser;' \
-        'MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;' \
-        'StartupNotify=true' \
-        > /usr/share/applications/firefox-esr.desktop; \
-    test -s /usr/share/applications/firefox-esr.desktop; \
-    grep -q '^Exec=/usr/local/bin/firefox' /usr/share/applications/firefox-esr.desktop; \
-    test -f /opt/firefox/browser/chrome/icons/default/default128.png; \
-    if command -v update-desktop-database >/dev/null 2>&1; then \
-        update-desktop-database /usr/share/applications; \
-    fi
+        "Types: deb" \
+        "URIs: https://packages.mozilla.org/apt" \
+        "Suites: mozilla" \
+        "Components: main" \
+        "Architectures: ${arch}" \
+        "Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc" \
+        > /etc/apt/sources.list.d/mozilla.sources; \
+    printf '%s\n' \
+        "Package: *" \
+        "Pin: origin packages.mozilla.org" \
+        "Pin-Priority: 1000" \
+        > /etc/apt/preferences.d/mozilla; \
+    printf '%s\n' \
+        "Package: firefox" \
+        "Pin: release o=Ubuntu" \
+        "Pin-Priority: -1" \
+        >> /etc/apt/preferences.d/mozilla; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends firefox; \
+    command -v firefox; \
+    test -x /usr/bin/firefox; \
+    test -f /usr/share/applications/firefox.desktop; \
+    ln -sf /usr/share/applications/firefox.desktop \
+        /usr/share/applications/firefox-esr.desktop; \
+    test -L /usr/share/applications/firefox-esr.desktop; \
+    update-desktop-database /usr/share/applications 2>/dev/null || true; \
+    rm -rf /var/lib/apt/lists/*
 
 # --- Project files: shared config templates, assets, helper CLI ---
 COPY config/ /opt/clouddesk/config/
