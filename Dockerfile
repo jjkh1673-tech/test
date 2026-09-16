@@ -59,33 +59,57 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # --- Firefox ESR (official Mozilla tarball: no snap, works without systemd) ---
-RUN arch="$(dpkg --print-architecture)" \
-    && case "$arch" in \
-           amd64) mozarch="linux-x86_64" ;; \
-           arm64) mozarch="linux-aarch64" ;; \
-           *) echo "Unsupported architecture: $arch"; exit 1 ;; \
-       esac \
-    && curl -fL "https://download.mozilla.org/?product=firefox-esr-latest-ssl&os=${mozarch}&lang=en-US" \
-        -o /tmp/firefox.tar.xz \
-    && mkdir -p /opt/firefox \
-    && tar -xJf /tmp/firefox.tar.xz -C /opt/firefox --strip-components=1 \
-    && rm -f /tmp/firefox.tar.xz \
-    && ln -sf /opt/firefox/firefox /usr/local/bin/firefox \
-    && printf '%s\n' \
-       '[Desktop Entry]' \
-       'Version=1.0' \
-       'Type=Application' \
-       'Name=Firefox' \
-       'GenericName=Web Browser' \
-       'Comment=Browse the Web' \
-       'Exec=/usr/local/bin/firefox %u' \
-       'Terminal=false' \
-       'Icon=/opt/firefox/browser/chrome/icons/default/default128.png' \
-       'Categories=Network;WebBrowser;' \
-       'MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;' \
-       'StartupNotify=true' \
-       > /usr/share/applications/firefox-esr.desktop \
-    && update-desktop-database /usr/share/applications 2>/dev/null || true
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) mozarch="linux64" ;; \
+        arm64) mozarch="linux64-aarch64" ;; \
+        *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
+    esac; \
+    firefox_url="https://download.mozilla.org/?product=firefox-esr-latest&os=${mozarch}&lang=en-US"; \
+    echo "Downloading Firefox ESR from: ${firefox_url}"; \
+    rm -f /tmp/firefox.tar.xz; \
+    curl --fail --show-error --silent --location \
+        --retry 5 \
+        --retry-delay 3 \
+        --retry-all-errors \
+        --connect-timeout 30 \
+        --max-time 600 \
+        "$firefox_url" \
+        --output /tmp/firefox.tar.xz; \
+    test -s /tmp/firefox.tar.xz; \
+    file /tmp/firefox.tar.xz; \
+    tar -tJf /tmp/firefox.tar.xz >/dev/null; \
+    rm -rf /opt/firefox; \
+    mkdir -p /opt/firefox; \
+    tar -xJf /tmp/firefox.tar.xz \
+        -C /opt/firefox \
+        --strip-components=1; \
+    test -x /opt/firefox/firefox; \
+    test -f /opt/firefox/application.ini; \
+    rm -f /tmp/firefox.tar.xz; \
+    ln -sf /opt/firefox/firefox /usr/local/bin/firefox; \
+    mkdir -p /usr/share/applications; \
+    printf '%s\n' \
+        '[Desktop Entry]' \
+        'Version=1.0' \
+        'Type=Application' \
+        'Name=Firefox' \
+        'GenericName=Web Browser' \
+        'Comment=Browse the Web' \
+        'Exec=/usr/local/bin/firefox %u' \
+        'Terminal=false' \
+        'Icon=/opt/firefox/browser/chrome/icons/default/default128.png' \
+        'Categories=Network;WebBrowser;' \
+        'MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;' \
+        'StartupNotify=true' \
+        > /usr/share/applications/firefox-esr.desktop; \
+    test -s /usr/share/applications/firefox-esr.desktop; \
+    grep -q '^Exec=/usr/local/bin/firefox' /usr/share/applications/firefox-esr.desktop; \
+    test -f /opt/firefox/browser/chrome/icons/default/default128.png; \
+    if command -v update-desktop-database >/dev/null 2>&1; then \
+        update-desktop-database /usr/share/applications; \
+    fi
 
 # --- Project files: shared config templates, assets, helper CLI ---
 COPY config/ /opt/clouddesk/config/
